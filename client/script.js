@@ -5,6 +5,21 @@ const game = createGame();
 const keyboardListener = createKeyboardListener();
 keyboardListener.subscribe(game.movePlayer)
 
+const player1 = {
+    playerId: 'player1',
+    playerX: 0,
+    playerY: 0
+}
+
+const fruit1 = {
+    fruitId: 'fruit1',
+    fruitX: 2,
+    fruitY: 2
+}
+
+game.addPlayer(player1)
+game.addFruit(fruit1)
+
 
 function createKeyboardListener() {
     const state = {
@@ -67,13 +82,8 @@ function clearScreen() {
 
 function createGame() {
     const state = {
-        players: {
-            'player1': { x: 1, y: 1 },
-            'player2': { x: 1, y: 3 }
-        },
-        fruits: {
-            'fruit1': { x: 3, y: 1 }
-        }
+        players: {},
+        fruits: {}
     }
 
     const acceptedMoves = {
@@ -99,19 +109,72 @@ function createGame() {
         }
     }
 
+    function addPlayer(command){
+        const playerId = command.playerId
+        const playerX = command.playerX
+        const playerY = command.playerY
+
+        state.players[playerId] = {
+            x: playerX,
+            y: playerY
+        }
+    }
+
+    function removePlayer(command){
+        const playerId = command.playerId
+
+        delete state.players[playerId]
+    }
+
+    function addFruit(command){
+        const fruitId = command.fruitId
+        const fruitX = command.fruitX
+        const fruitY = command.fruitY
+
+        state.fruits[fruitId] = {
+            x: fruitX,
+            y: fruitY
+        }
+    }
+
+    function removeFruit(command){
+        const fruitId = command.fruitId
+
+        delete state.fruits[fruitId]
+    }
+
+    function checkForFruitCollision(playerId){
+        const player = state.players[playerId]
+
+        for(const fruitId in state.fruits){
+            const fruit = state.fruits[fruitId]
+
+            if(player.x === fruit.x && player.y === fruit.y) {
+                console.log("collision")
+                removeFruit( { fruitId: fruitId })
+            }
+        }
+    }
+
     function movePlayer(command) {
         console.log(`Moving ${command.playerId} with ${command.keyPressed}`)
 
         const keyPressed = command.keyPressed
+        const playerId = command.playerId
         const player = state.players[command.playerId]
         const moveFunction = acceptedMoves[keyPressed]
 
-        if(moveFunction) {
+        if(player && moveFunction) {
             moveFunction(player)
+            checkForFruitCollision(playerId)
         }
     }
 
     return {
+        addFruit,
+        removeFruit,
+        addPlayer,
+        removePlayer,
         movePlayer,
         state
     }
